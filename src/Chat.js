@@ -4,12 +4,36 @@ import InsertEmoticonIcon from '@material-ui/icons/InsertEmoticon';
 import MicIcon from '@material-ui/icons/Mic';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import SearchIcon from '@material-ui/icons/Search';
-import Axios from 'axios';
-import React, { useState } from 'react';
+import firebase from 'firebase';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import './Chat.css';
+import db from './firebase';
+import { useStateValue } from './StateProvider';
 
 const Chat = ({ messages }) => {
+  const { roomId } = useParams();
   const [msg, setmsg] = useState('');
+  const [room, setroom] = useState('');
+  const [msgs, setmsgs] = useState([]);
+
+  const [{ user }, dispatch] = useStateValue();
+
+  useEffect(() => {
+    if (roomId) {
+      db.collection('rooms')
+        .doc(roomId)
+        .onSnapshot((snapShot) => {
+          setroom(snapShot.data().name);
+        });
+
+      db.collection('rooms')
+        .doc(roomId)
+        .collection('messages')
+        .orderBy('timestamp', 'asc')
+        .onSnapshot((snap) => setmsgs(snap.docs.map((doc) => doc.data())));
+    }
+  }, [roomId]);
 
   return (
     <div className='chat'>
@@ -17,8 +41,10 @@ const Chat = ({ messages }) => {
         <Avatar />
 
         <div className='chat_headerinfo'>
-          <h3>Room name</h3>
-          <p>Last seen at...</p>
+          <h3>{room}</h3>
+          <p>
+            {new Date(msgs[msgs.length - 1]?.timestamp?.toDate()).toUTCString()}
+          </p>
         </div>
 
         <div className='chat_headerright'>
@@ -35,16 +61,26 @@ const Chat = ({ messages }) => {
       </div>
 
       <div className='chat_body'>
-        {messages.map((message) => (
+        {msgs.map((message) => (
           <>
-            <p
+            {/* <p
               className={`chat_message ${message.received && 'chat_reciver'}`}
               key={message._id}>
               <span className='chat_name'>{message.name}</span>
               {message.message}
               <span className='chat_timestamp'>{message.createdAt}</span>
+            </p> */}
+            <p
+              className={`chat_message ${
+                message.name === user.displayName && 'chat_reciver'
+              }`}
+              key={message.timestamp}>
+              <span className='chat_name'>{message.name}</span>
+              {message.message}
+              <span className='chat_timestamp'>
+                {new Date(message.timestamp?.toDate()).toUTCString()}
+              </span>
             </p>
-            {/* <span className='chat_timestamp'>{new Date().toUTCString()}</span> */}
           </>
         ))}
       </div>
@@ -54,12 +90,19 @@ const Chat = ({ messages }) => {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            // console.log( msg );
-            Axios.post('http://localhost:5000/messege/new', {
+            // Axios.post('http://localhost:5000/messege/new', {
+            //   message: msg,
+            //   name: 'Roy',
+            //   received: true,
+            // } ).then( ( res ) => console.log( res.data ) );
+
+            db.collection('rooms').doc(roomId).collection('messages').add({
+              name: user.displayName,
               message: msg,
-              name: 'Roy',
-              received: true,
-            }).then((res) => console.log(res.data));
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+
+            setmsg('');
           }}>
           <input
             type='text'
