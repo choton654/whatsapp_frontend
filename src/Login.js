@@ -23,7 +23,10 @@ const Login = () => {
   return (
     <div className='login'>
       <div className='login_container'>
-        <img src='https://i.gadgets360cdn.com/large/whatsapp_1569662156405.jpg' />
+        <img
+          src='https://i.gadgets360cdn.com/large/whatsapp_1569662156405.jpg'
+          alt='whats-app'
+        />
         <div className='login_text'>
           <h1>SignIn to WhatsAapp</h1>
         </div>

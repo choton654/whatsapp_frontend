@@ -1,14 +1,14 @@
 import { Avatar, IconButton } from '@material-ui/core';
 import AttachFileIcon from '@material-ui/icons/AttachFile';
 import InsertEmoticonIcon from '@material-ui/icons/InsertEmoticon';
+import KeyboardReturnIcon from '@material-ui/icons/KeyboardReturn';
 import MicIcon from '@material-ui/icons/Mic';
-import MoreVertIcon from '@material-ui/icons/MoreVert';
 import SearchIcon from '@material-ui/icons/Search';
 import firebase from 'firebase';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import './Chat.css';
-import db from './firebase';
+import db, { auth } from './firebase';
 import { useStateValue } from './StateProvider';
 
 const Chat = ({ messages }) => {
@@ -54,8 +54,16 @@ const Chat = ({ messages }) => {
           <IconButton>
             <AttachFileIcon />
           </IconButton>
-          <IconButton>
-            <MoreVertIcon />
+          <IconButton
+            onClick={() => {
+              auth
+                .signOut()
+                .then(() => {
+                  alert('signout successfull');
+                })
+                .catch((err) => console.error(err));
+            }}>
+            <KeyboardReturnIcon />
           </IconButton>
         </div>
       </div>
